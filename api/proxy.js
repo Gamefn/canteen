@@ -1,10 +1,10 @@
-export const config = {
+module.exports.config = {
   api: {
     bodyParser: false,
   },
 };
 
-export default async function handler(req, res) {
+module.exports.default = async function handler(req, res) {
   const targetUrl = "https://kitsu.eu.pythonanywhere.com" + req.url;
 
   try {
@@ -26,4 +26,12 @@ export default async function handler(req, res) {
 
     const buffer = await response.arrayBuffer();
 
-    // Set content-t
+    const contentType = response.headers.get("content-type");
+    if (contentType) res.setHeader("Content-Type", contentType);
+
+    res.status(response.status).send(Buffer.from(buffer));
+  } catch (err) {
+    console.error("Proxy Error:", err);
+    res.status(500).send("Proxy server error");
+  }
+};
