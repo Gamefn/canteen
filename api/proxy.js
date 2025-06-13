@@ -1,7 +1,21 @@
 export default async function handler(req, res) {
-  const response = await fetch("https://kitsu.eu.pythonanywhere.com" + req.url);
-  const data = await response.text();
+  const targetUrl = "https://kitsu.eu.pythonanywhere.com" + req.url;
 
-  res.setHeader("Content-Type", "text/html");
-  res.status(200).send(data);
+  const response = await fetch(targetUrl, {
+    method: req.method,
+    headers: {
+      ...req.headers,
+      host: "kitsu.eu.pythonanywhere.com"
+    },
+    body: req.method !== "GET" && req.method !== "HEAD"
+      ? req.body ?? null
+      : undefined,
+    redirect: "follow"
+  });
+
+  const contentType = response.headers.get("content-type");
+  if (contentType) res.setHeader("Content-Type", contentType);
+
+  const data = await response.arrayBuffer();
+  res.status(response.status).send(Buffer.from(data));
 }
