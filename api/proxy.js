@@ -13,21 +13,17 @@ export default async function handler(req, res) {
       chunks.push(chunk);
     }
 
+    const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+
     const response = await fetch(targetUrl, {
       method: req.method,
       headers: {
         ...req.headers,
         host: "kitsu.eu.pythonanywhere.com",
       },
-      body: chunks.length > 0 ? Buffer.concat(chunks) : undefined,
+      body,
     });
 
-    // Set headers
-    for (const [key, value] of response.headers.entries()) {
-      res.setHeader(key, value);
-    }
+    const buffer = await response.arrayBuffer();
 
-    const data = await response.arrayBuffer();
-    res.status(response.status).send(Buffer.from(data));
-  } catch (err) {
-    console.error("Proxy error:", err);
+    // Set content-t
