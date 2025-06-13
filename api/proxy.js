@@ -7,6 +7,8 @@ module.exports.config = {
 module.exports.default = async function handler(req, res) {
   const targetUrl = "https://kitsu.eu.pythonanywhere.com" + req.url;
 
+  console.log(`[Proxy] ${req.method} ${req.url}`);
+
   try {
     const chunks = [];
     for await (const chunk of req) {
@@ -20,6 +22,8 @@ module.exports.default = async function handler(req, res) {
       headers: {
         ...req.headers,
         host: "kitsu.eu.pythonanywhere.com",
+        "content-type":
+          req.headers["content-type"] || "application/x-www-form-urlencoded",
       },
       body,
     });
@@ -27,11 +31,13 @@ module.exports.default = async function handler(req, res) {
     const buffer = await response.arrayBuffer();
 
     const contentType = response.headers.get("content-type");
-    if (contentType) res.setHeader("Content-Type", contentType);
+    if (contentType) {
+      res.setHeader("Content-Type", contentType);
+    }
 
     res.status(response.status).send(Buffer.from(buffer));
   } catch (err) {
-    console.error("Proxy Error:", err);
-    res.status(500).send("Proxy server error");
+    console.error("[Proxy Error]", err);
+    res.status(500).send("Proxy error");
   }
 };
